@@ -14,6 +14,7 @@ end
 
 def print_wip(project_name)
   PivotalTracker::Client.token = API_TOKEN
+  PivotalTracker::Client.use_ssl = true
   output = table(['email', 'Open Stories'])
   project = get_project project_name
   puts project.name
