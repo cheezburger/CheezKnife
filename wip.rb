@@ -1,13 +1,8 @@
 require 'pivotal-tracker'
+require 'terminal-table/import'
 require 'pp'
 
 API_TOKEN = ENV['PIVOTAL_API_TOKEN']
-
-if ARGV.length != 1
-  puts "usage:"
-  puts "ruby wip.rb [project_name or substring]"
-  exit
-end
 
 raise "Env Variable PIVOTAL_API_TOKEN must be defined." unless ENV.key? 'PIVOTAL_API_TOKEN' 
 
@@ -16,11 +11,19 @@ def get_project(name)
   return matching_projects[0]
 end
 
-PivotalTracker::Client.token = API_TOKEN
-project = get_project ARGV[0]
-puts project.name
-members = project.memberships.all
-members.each do |member|
-  num_assigned_stories = project.stories.all(:mywork => member.initials).count
-  puts "#{member.email}: #{num_assigned_stories}" unless num_assigned_stories == 0
+
+def print_wip(project_name)
+  PivotalTracker::Client.token = API_TOKEN
+  output = table(['email', 'Open Stories'])
+  project = get_project project_name
+  puts project.name
+  members = project.memberships.all
+  members.each do |member|
+    num_assigned_stories = project.stories.all(:mywork => member.initials, :state => "started,finished,delivered,rejected").count
+    output << [member.email,  num_assigned_stories] unless num_assigned_stories == 0
+  end
+  puts output
+  puts
 end
+
+ARGV.each { |x| print_wip x }
