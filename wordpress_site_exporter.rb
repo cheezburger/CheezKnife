@@ -3,7 +3,8 @@
 require "FileUtils"
 
 def download_export_from(from_year, through_year, backup_directory, root_url, username, password)
-  `curl -i -L --data "log=#{username}&pwd=#{password}" --cookie wordpress_cookies --cookie-jar wordpress_cookies --location wordpress_cookies.txt "http://cheezdailysquee.wordpress.com/wp-login.php"`
+  
+  `curl -i -L --data "log=#{username}&pwd=#{password}" --cookie wordpress_cookies --cookie-jar wordpress_cookies --location wordpress_cookies.txt "http://#{root_url}/wp-login.php"`
   (from_year..through_year).each do |start_year|
     (1..12).each do |start_month|
       if start_month == 12
@@ -40,3 +41,4 @@ pw = "password"
 # download_export_from(2010, 2011, "exported_files/cheezdailysquee", "cheezdailysquee.wordpress.com", login, pw)
 # download_export_from(2010, 2011, "exported_files/bronies", "bronies.memebase.com", login, pw)
 # download_export_from(2010, 2011, "exported_files/thereifixedit", "thereifixedit.failblog.org", login, pw)
+# download_export_from(2012, 2013, "exported_files/localhost", "wp.localhost.com:4039", "administrator", "password")
