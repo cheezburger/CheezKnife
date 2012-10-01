@@ -17,29 +17,41 @@ pages = []
 app_servers = servers["cheezburger.common"]
 app_servers.each_value do |cluster|
   cluster.each do |server|
-    pages << "http://#{server["hostname"]}/iamwho"
+    pages << "http://#{server["hostname"]}/iamwho?format=json"
   end
 end
 
+def print_server_info(url, response, response_time)
+  begin
+    server_info = JSON.parse response.body 
+    version = server_info["ApplicationReleaseTag"]["value"]
+  rescue
+    version = "UNKNOWN_ERROR"
+  end
+  printf "Response: %-60s %-5s%-10s%-20s\n", url, response.code, response_time, version
+end
 
 threads = []
 semaphore = Mutex.new
 
 for page in pages
   threads << Thread.new(page) { |myPage|
+    
+    start_time = Time.now
 
     uri = URI.parse(myPage)
     http = Net::HTTP.new(uri.host, uri.port)
-    http.read_timeout = 4000
-    http.open_timeout = 4000
+    http.read_timeout = 4
+    http.open_timeout = 4
  
     success = true
-    resp, data = http.get(uri.path) rescue success = false
-    
+    resp = http.get(uri.request_uri) rescue success = false
+    end_time = Time.now
+    delta = end_time - start_time
     semaphore.synchronize {
-      if success 
-        printf "Response: %-60s %s\n", myPage, resp.code
-      else puts "Failed: #{myPage}" end
+      if (success && resp.code == "200")
+        print_server_info myPage, resp, delta 
+      else puts "Failed: #{myPage}\t#{delta}" end
     }
   }
 end
